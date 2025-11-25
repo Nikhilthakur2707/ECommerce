@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Decorify — Home Decor Marketplace</title>
+  <title>Decorify – Home Decor Marketplace</title>
   <style>
     :root{--bg:#0f1724;--card:#0b1220;--muted:#94a3b8;--accent:#f97316;--glass:rgba(255,255,255,0.03);--max-w:1200px;font-family:Inter,system-ui,sans-serif}
     *{box-sizing:border-box;margin:0;padding:0}
@@ -24,7 +24,7 @@
     .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
     .product{padding:12px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.01),transparent);border:1px solid rgba(255,255,255,0.02);transition:all 0.3s}
     .product:hover{border-color:rgba(255,255,255,0.1);transform:translateY(-2px)}
-    .product img{width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px}
+    .product img{width:100%;height:150px;object-fit:cover;border-radius:8px;margin-bottom:10px;cursor:pointer}
     .product .title{font-weight:600;font-size:15px;margin-bottom:5px}
     .price-row{display:flex;justify-content:space-between;align-items:center;margin:8px 0}
     .tag{background:rgba(34,197,94,0.15);padding:4px 8px;border-radius:999px;font-size:11px;color:#4ade80;font-weight:600}
@@ -34,7 +34,7 @@
     .cart-item img{width:56px;height:56px;object-fit:cover;border-radius:8px}
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px;z-index:100}
     .modal-backdrop.open{display:flex}
-    .modal{background:#0b1220;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px;max-width:500px;width:100%;position:relative}
+    .modal{background:#0b1220;border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:32px;max-width:500px;width:100%;position:relative;max-height:90vh;overflow-y:auto}
     .close-x{position:absolute;top:16px;right:16px;background:transparent;border:0;color:#fff;font-size:28px;cursor:pointer}
     .auth-form{display:flex;flex-direction:column;gap:16px;margin-top:20px}
     .auth-form input{padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white}
@@ -102,6 +102,12 @@
           <span id="authToggleText"></span>
           <a onclick="toggleAuthMode()" style="color:var(--accent);cursor:pointer;text-decoration:underline" id="authToggleLink"></a>
         </div>
+      </div>
+    </div>
+    <div class="modal-backdrop" id="productModal">
+      <div class="modal" style="max-width:600px">
+        <button class="close-x" onclick="closeProductModal()">×</button>
+        <div id="productModalContent"></div>
       </div>
     </div>
   </div>
@@ -255,7 +261,7 @@
       return `
         <div class="card" style="background:linear-gradient(90deg,rgba(255,255,255,0.02),rgba(255,255,255,0.0));padding:40px">
           <h2 style="font-size:32px;margin-bottom:12px">Bring your space to life</h2>
-          <p style="color:var(--muted);margin-bottom:20px;font-size:18px">Curated handpicked home decor — sustainable, stylish, and affordable.</p>
+          <p style="color:var(--muted);margin-bottom:20px;font-size:18px">Curated handpicked home decor – sustainable, stylish, and affordable.</p>
           <button class="btn" onclick="navigateTo('shop')" style="padding:14px 24px;font-size:16px">Shop Now</button>
         </div>
         <div class="card">
@@ -321,7 +327,7 @@
             ${wishlistItems.map(p => `
               <div class="product">
                 <div style="position:relative">
-                  <img src="${p.img}" alt="${p.title}">
+                  <img src="${p.img}" alt="${p.title}" onclick="showProductDetails('${p.id}')">
                   <button onclick="toggleWishlist('${p.id}')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:none;color:#ef4444;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px">×</button>
                 </div>
                 <div class="title">${p.title}</div>
@@ -363,51 +369,49 @@
           
           <div style="display:grid;grid-template-columns:1fr 400px;gap:24px" class="checkout-grid">
             <div>
-              <form onsubmit="handleCheckout(event)" id="checkoutForm">
-                <div class="card">
-                  <h3 style="margin-bottom:16px">📍 Shipping Address</h3>
-                  <div style="display:grid;gap:12px">
-                    <input type="text" name="fullName" placeholder="Full Name" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
-                    <input type="email" name="email" placeholder="Email" required value="${state.user?.email || ''}" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
-                    <input type="tel" name="phone" placeholder="Phone Number" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
-                    <textarea name="address" placeholder="Full Address" required rows="2" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;font-family:inherit"></textarea>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                      <input type="text" name="city" placeholder="City" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
-                      <input type="text" name="pincode" placeholder="Pincode" required pattern="[0-9]{6}" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
-                    </div>
+              <div class="card">
+                <h3 style="margin-bottom:16px">📍 Shipping Address</h3>
+                <div style="display:grid;gap:12px">
+                  <input type="text" id="fullName" placeholder="Full Name" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
+                  <input type="email" id="email" placeholder="Email" required value="${state.user?.email || ''}" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
+                  <input type="tel" id="phone" placeholder="Phone Number" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
+                  <textarea id="address" placeholder="Full Address" required rows="2" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;font-family:inherit"></textarea>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <input type="text" id="city" placeholder="City" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
+                    <input type="text" id="pincode" placeholder="Pincode" required pattern="[0-9]{6}" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white"/>
                   </div>
                 </div>
+              </div>
 
-                <div class="card" style="margin-top:20px">
-                  <h3 style="margin-bottom:16px">💳 Payment Information</h3>
-                  <div style="display:grid;gap:12px">
+              <div class="card" style="margin-top:20px">
+                <h3 style="margin-bottom:16px">💳 Payment Information</h3>
+                <div style="display:grid;gap:12px">
+                  <div>
+                    <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">Card Number</label>
+                    <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" required maxlength="19" pattern="[0-9 ]{16,19}" value="4242 4242 4242 4242" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%;font-family:monospace"/>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
                     <div>
-                      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">Card Number</label>
-                      <input type="text" name="cardNumber" placeholder="1234 5678 9012 3456" required maxlength="19" pattern="[0-9 ]{16,19}" value="4242 4242 4242 4242" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%;font-family:monospace"/>
-                    </div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-                      <div>
-                        <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">Expiry Date</label>
-                        <input type="text" name="expiry" placeholder="MM/YY" required maxlength="5" pattern="[0-9]{2}/[0-9]{2}" value="12/28" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%;font-family:monospace"/>
-                      </div>
-                      <div>
-                        <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">CVV</label>
-                        <input type="text" name="cvv" placeholder="123" required maxlength="3" pattern="[0-9]{3}" value="123" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%;font-family:monospace"/>
-                      </div>
+                      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">Expiry Date</label>
+                      <input type="text" id="expiry" placeholder="MM/YY" required maxlength="5" pattern="[0-9]{2}/[0-9]{2}" value="12/28" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%;font-family:monospace"/>
                     </div>
                     <div>
-                      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">Cardholder Name</label>
-                      <input type="text" name="cardName" placeholder="Name on Card" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%"/>
+                      <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">CVV</label>
+                      <input type="text" id="cvv" placeholder="123" required maxlength="3" pattern="[0-9]{3}" value="123" style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%;font-family:monospace"/>
                     </div>
                   </div>
-                  <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,0.1);border-radius:8px;border:1px solid rgba(59,130,246,0.2)">
-                    <div style="color:#60a5fa;font-size:12px;line-height:1.6">
-                      🔒 <strong>Demo Payment Mode</strong><br>
-                      Use the pre-filled card details for testing. No real payment will be processed. This is a demonstration checkout for educational purposes.
-                    </div>
+                  <div>
+                    <label style="display:block;margin-bottom:8px;font-size:13px;color:var(--muted)">Cardholder Name</label>
+                    <input type="text" id="cardName" placeholder="Name on Card" required style="padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.02);color:white;width:100%"/>
                   </div>
                 </div>
-              </form>
+                <div style="margin-top:16px;padding:12px;background:rgba(59,130,246,0.1);border-radius:8px;border:1px solid rgba(59,130,246,0.2)">
+                  <div style="color:#60a5fa;font-size:12px;line-height:1.6">
+                    🔒 <strong>Demo Payment Mode</strong><br>
+                    Use the pre-filled card details for testing. No real payment will be processed. This is a demonstration checkout for educational purposes.
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div>
@@ -443,7 +447,7 @@
                     <span style="color:var(--accent)">₹${formatINR(total)}</span>
                   </div>
                 </div>
-                <button type="submit" form="checkoutForm" class="btn" style="width:100%;padding:16px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px">
+                <button onclick="handleCheckout()" class="btn" id="checkoutBtn" style="width:100%;padding:16px;font-size:16px;display:flex;align-items:center;justify-content:center;gap:8px">
                   <span>🔒</span>
                   <span>Place Order - ₹${formatINR(total)}</span>
                 </button>
@@ -511,6 +515,49 @@
       `;
     }
 
+    function showProductDetails(productId) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      if (!product) return;
+      
+      const inWishlist = state.wishlist.has(product.id);
+      const inCart = state.cart[product.id];
+      
+      const modalContent = $('productModalContent');
+      modalContent.innerHTML = `
+        <div style="display:grid;gap:20px">
+          <img src="${product.img}" alt="${product.title}" style="width:100%;height:300px;object-fit:cover;border-radius:12px"/>
+          <div>
+            <h2 style="margin-bottom:8px">${product.title}</h2>
+            <div style="color:var(--muted);margin-bottom:12px">${product.category}</div>
+            <div style="font-size:28px;font-weight:800;color:var(--accent);margin-bottom:16px">₹${formatINR(product.price)}</div>
+            <div style="background:rgba(34,197,94,0.15);color:#4ade80;padding:8px 12px;border-radius:8px;display:inline-block;margin-bottom:16px;font-size:13px;font-weight:600">
+              ✓ Free Delivery Available
+            </div>
+            <div style="margin-bottom:20px">
+              <h3 style="font-size:16px;margin-bottom:8px">Description</h3>
+              <p style="color:var(--muted);line-height:1.6">${product.desc || 'Premium quality home decor item crafted with care. Perfect for adding style and elegance to your living space.'}</p>
+            </div>
+            <div style="display:flex;gap:12px;flex-wrap:wrap">
+              <button class="btn" onclick="addToCart('${product.id}'); closeProductModal();" style="flex:1;padding:14px">
+                ${inCart ? '✓ In Cart (' + inCart + ')' : 'Add to Cart'}
+              </button>
+              ${state.user ? `
+                <button class="btn" onclick="toggleWishlist('${product.id}'); showProductDetails('${product.id}');" style="background:${inWishlist ? 'linear-gradient(90deg,#ef4444,#dc2626)' : 'linear-gradient(90deg,#ec4899,#f472b6)'};padding:14px">
+                  ${inWishlist ? '❤️ In Wishlist' : '🤍 Add to Wishlist'}
+                </button>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+      
+      $('productModal').classList.add('open');
+    }
+
+    function closeProductModal() {
+      $('productModal').classList.remove('open');
+    }
+
     function renderProducts(list) {
       const container = $('products');
       if (!container) return;
@@ -528,7 +575,7 @@
         const inCart = state.cart[p.id];
         el.innerHTML = `
           <div style="position:relative">
-            <img src="${p.img}" alt="${p.title}">
+            <img src="${p.img}" alt="${p.title}" onclick="showProductDetails('${p.id}')">
             ${state.user ? `<button onclick="toggleWishlist('${p.id}')" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,0.7);border:none;color:${inWishlist ? '#ef4444' : '#fff'};width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px">❤</button>` : ''}
           </div>
           <div class="title">${p.title}</div>
@@ -702,11 +749,25 @@
       showNotification('Logged out successfully');
     }
 
-    async function handleCheckout(e) {
-      e.preventDefault();
-      
-      // Get the submit button safely
-      const submitBtn = e.target.querySelector('button[type="submit"]');
+    async function handleCheckout() {
+      // Validate form fields
+      const fullName = $('fullName')?.value;
+      const email = $('email')?.value;
+      const phone = $('phone')?.value;
+      const address = $('address')?.value;
+      const city = $('city')?.value;
+      const pincode = $('pincode')?.value;
+      const cardNumber = $('cardNumber')?.value;
+      const expiry = $('expiry')?.value;
+      const cvv = $('cvv')?.value;
+      const cardName = $('cardName')?.value;
+
+      if (!fullName || !email || !phone || !address || !city || !pincode || !cardNumber || !expiry || !cvv || !cardName) {
+        showNotification('Please fill in all fields', 'error');
+        return;
+      }
+
+      const submitBtn = $('checkoutBtn');
       if (!submitBtn) {
         console.error('Submit button not found');
         return;
@@ -728,11 +789,19 @@
       }));
       
       try {
-        await apiCall('/orders', {
+        const orderResponse = await apiCall('/orders', {
           method: 'POST',
           body: JSON.stringify({
             products: items,
-            status: 'Placed'
+            status: 'Placed',
+            shippingAddress: {
+              fullName,
+              email,
+              phone,
+              address,
+              city,
+              pincode
+            }
           })
         });
         
@@ -839,6 +908,10 @@
 
     $('authModal').addEventListener('click', (e) => {
       if (e.target === $('authModal')) closeAuthModal();
+    });
+
+    $('productModal').addEventListener('click', (e) => {
+      if (e.target === $('productModal')) closeProductModal();
     });
 
     // Initialize application

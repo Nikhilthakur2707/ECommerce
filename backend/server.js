@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const connectDB = require('./config/db');
 const cors = require('cors');
+const orderRoutes = require('./routes/orders');
 
 const app = express();
 
@@ -26,7 +27,7 @@ app.use('/api/orders', require('./routes/orders'));
 app.use('/api/products', require('./routes/products'));
 app.use('/api/cart', require('./routes/cart'));
 app.use('/api/wishlist', require('./routes/wishlist'));
-
+app.use('/api/orders', orderRoutes);
 // Health check
 app.get('/', (req, res) => {
   res.json({ 
